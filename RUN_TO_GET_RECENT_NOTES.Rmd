@@ -1,0 +1,10 @@
+Run below code block to get the most recent notes from github.
+
+To run a block, click anywhere inside it, and click shift+ctrl+enter, or click the green play button on it.
+
+```{r echo = T, results = 'hide'}
+devtools::install_github('ddi-talent/usheR', ref = "stable1")
+library(usheR)
+update_from_github()
+```
+
