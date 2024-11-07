@@ -1,0 +1,18 @@
+```{r}
+# Compute cosine similarity
+cosine_similarity <- function(a, b) {
+  sum(a * b) / (sqrt(sum(a^2)) * sqrt(sum(b^2)))
+}
+# Example: Similarity between two words
+word1 <- "king"
+word2 <- "queen"
+similarity <- cosine_similarity(glove_matrix[word1, ], glove_matrix[word2, ])
+print(similarity)
+
+# Example: Find words similar to "hospital"
+target_word <- "hospital"
+similarities <- apply(glove_matrix, 1, function(x) cosine_similarity(x, glove_matrix[target_word, ]))
+similar_words <- sort(similarities, decreasing = TRUE)[1:10]  # Top 10 similar words
+print(similar_words)
+```
+

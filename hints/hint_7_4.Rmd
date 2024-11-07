@@ -1,0 +1,27 @@
+```{r}
+cosine_similarity <- function(a, b) {
+  sum(a * b) / (sqrt(sum(a^2)) * sqrt(sum(b^2)))
+}
+
+similarity <- function(word1, word2) {
+  cosine_similarity(glove_matrix[word1, ], glove_matrix[word2, ])
+}
+
+similarity("hospital","clinic")
+similarity("sick","ill")
+```
+
+and second function
+
+```{r}
+words_similar_to <- function(word, how_many = 10){ 
+  similarities <- apply(glove_matrix, 1, function(matrix_row) cosine_similarity(matrix_row, glove_matrix[target_word, ]))
+  similar_words <- sort(similarities, decreasing = TRUE)[1:how_many]  
+  similar_words
+  # Top how_many similar words, with default beng top 10
+}
+
+print(words_similar_to("hospital"))
+# print(words_similar_to("sick")) 
+```
+
