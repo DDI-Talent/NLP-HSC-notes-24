@@ -1,0 +1,119 @@
+# Week 3 Tutorial
+
+For the last time we will look at the Pride and Prejudice (We promise a new dataset from next week 🌟 )
+
+Below tasks will challange you to apply (not just repeat) the techiques from badges 7,8 and 9.
+
+## Task: "They talk more about food than family!" with Common Word Embeddings - GloVE 🧤
+
+
+You goal: Verify the thesis: More common words in Pride and Prejudice have meaning similar to "Food" than to "Family"?
+
+1. Find some (100? 500? 1000?) most common words in the book (eg. using badge 5 activity "Terms frequency". You migth also want to `anti_join(stop_words)`)
+2. Create two new columns in which you will store the given words similarity to word `food` and another one for similarity with word `family` (eg. by Using answers ansers to badge 7 activity with Glove files)
+3. Look at the top values for each term, and decide on a a cut-off point (what simmilarity value should already not count as simmilar). Then add occurrences of all good words and all bad words.
+4. Validate or deny the thesis.
+
+
+```{r, include=FALSE}
+# IF ASKED ABOTU RESTARTING R SAY: NO
+install.packages("pacman")
+pacman::p_load(ggplot2,dplyr, stringr, udpipe, lattice, tidytext, readr, SnowballC, textstem, syuzhet, igraph, tidyr,RColorBrewer,wordcloud)
+
+```
+and now the data:
+```{r}
+pride_prejudice_raw_text <- read.delim("./data/pride_prejudice.txt", stringsAsFactor = FALSE)
+colnames(pride_prejudice_raw_text)[1] ="text" 
+pride_prejudice <- as_tibble(pride_prejudice_raw_text) 
+```
+
+```{r}
+## Term Frequency
+ #  yoru code here
+```
+[hint: answer to Term Frequency](./hints/hint_9lab_1.Rmd)
+
+
+Download glove file if you do not have it yetm tgen look at similarity (badge 7)
+
+```{r}
+library(data.table)
+# Specify the path to the GloVe file
+options(timeout = 600)
+download.file("http://nlp.uoregon.edu/download/embeddings/glove.6B.100d.txt", 
+              "./data/glove.6B.100d.txt") 
+```
+
+now do the thing:
+
+```{r}
+glove_file <- "./data/glove.6B.100d.txt"
+#  your code here...
+
+
+```
+
+[hint: answer to counting simmilar words](./hints/hint_9lab_2.Rmd)
+
+
+## TASK 2: Prouder and More Prejudices! Improve the entity recognition by cleaning up the dataset better!
+
+In the badge 8 we had a good simple test if the entity recognition recognises every sentence of Elisabeth as a person. We have out 'point of truth'/'perfect answer' by just counting the occurances of a word `Elizabeth` (634 times). Then we use Entity recognition, and check how many times there a word Elizabeth was recognised as a person (eg. 420 times). If Entity recognition gets very close to simple word count (to 634) then we can be more confident that it works well. In the simple example in badge 8 we saw that without data cleaning, 'person Elisabeth' is recognised 435 times. Add extra cleanup steps below to improve that number, even if you just improve it a little bit.
+
+Here are some ideas: is punctuation removed? what is Elizabeth appears twice in one sentence? Try to be creative. You are given some starting code below.
+
+```{r, include=FALSE}
+pacman::p_load_gh("trinker/entity")
+pacman::p_load(entity, magrittr, tidytext, dplyr, tidyr)
+data(wiki)
+person_entity(wiki)
+# NOTE! at this point RStudio might ask you a question in 'Console' area at the bottom of your screen.
+# Go there and type 'Yes' and click Enter. It will start installing a large-ish file (74.2 MB), which will take 2-3 minutes
+```
+
+Before we start fixing things on the whole book, first here is a silly example. Start by cleaning up this data (use code, not just change the text!)
+
+In the text there are 5 Elizabeths, but the below code only shows 3. What could be wrong? Fix one problem (eg. puncluation) and see it ti made things better.
+
+```{r}
+#  your code here
+pride_prejudice_demo <- data.frame(text=c("Elizabeth is called Elizabeth.", 
+                                               "Isn't Elizabeth called Bob?", 
+                                               "Elizabeth is called Natasha.", 
+                                               "Bob is called Elizabeth.", 
+                                               "Bob is called Bob.", 
+                                               "Cat is called Bob."))
+
+# your cleanup code here:
+
+
+
+# and below code will just count how many times Elizabeth was recognised as person:
+
+pride_prejudice_demo$Name <- person_entity(pride_prejudice_demo$text)
+
+pride_prejudice_demo <- pride_prejudice_demo %>%
+  mutate(NamesFlat = sapply(Name, function(x) paste(x, collapse = " ")))
+
+pride_prejudice_demo <- pride_prejudice_demo %>%
+  mutate(count_elizabeth = str_count(NamesFlat, fixed("Elizabeth")))
+
+count_elizabeth <- pride_prejudice_demo$count_elizabeth %>% sum()
+print(count_elizabeth)
+# to see more detials open pride_prejudice_demo in the Environment
+```
+
+[hint: answer](./hints/hint_9lab_3.Rmd)
+
+Ok, now go and apply this, and any other cleaning up strategy to the full text of `pride_prejudice` variable. How much did Elizabeth recognition improve?
+
+
+```{r}
+pride_prejudice_raw_text <- read.delim("./data/pride_prejudice.txt", stringsAsFactor = FALSE)
+colnames(pride_prejudice_raw_text)[1] ="text" 
+pride_prejudice <- as_tibble(pride_prejudice_raw_text) 
+
+# your code here (warning, it might not be as simple as above)
+
+```
