@@ -1,0 +1,172 @@
+---
+title: "Badge 10 Annotation"
+output: html_notebook
+---
+
+# Human Annotation
+
+In this badge we will not be creating BRAT files, because to do that you need the brat software. You can find a lot of examples of how the software looks and how it can be used on the [BRAT website](https://brat.nlplab.org/examples.html). Below we will be looking at loading files generated with Bart.
+
+At the bottom there is also an example of how you could create a BART file automatically (eg. with entity recognition) that then can be reviewed by the
+
+## BRAT annotation standard and .ann files
+
+In this example we will parse a BRAT annotation file. This format of annotation files will differ depending on annotation tools.  For named entity recognition or annotation where you are labelling segments in the text most tools work the same way. The labelling records the start and end character within the text where the label starts and ends.
+
+BRAT annotation files consist of a `.txt` file which holds the original text and `.ann` which holds the annotation. The files must have the same name e.g `file1.ann` and `file1.txt` 
+Open the `example.ann`  files to see the contents.
+
+```{r}
+# in this cde block we read and print contents of two files. you can also just open the files in your 'Files' section in RStudio
+filename <- "./data/example.txt"
+print(filename)
+print(readLines(filename))
+
+filename <- "./data/example.ann"
+print(filename)
+print(readLines(filename))
+# look at the file output. What do you think it means?
+```
+
+Let's look at this sentence. 
+
+`John moved to Paris last year.`
+
+Do you see a PERSON and LOCATION there? What can you say about them? eg. what are they? where do they start and end (whcih character)? What is their Relationship? eg. does John live in Paris, or Paris lives in John. (without getting too poetic 😜)
+
+
+All of that information gets encoded in `.ann` file format of a BRAT:
+
+- `Entity` lines (PERSON, LOCATION, etc) have this format : `ID`, `Type`, `Start_character`, `End_character`, and `Text`
+
+`"T1   PERSON     0     4       John"`
+`"T2   LOCATION   14    19      Paris"`
+
+- `Relation` lines (R1, R2, ...) are : `ID`, `Relation`, `Arg1`, and `Arg2`. 
+
+Most relationships will have a subject and object. like "wheel IS_PART_OF bicycle", "Prianka IS_FAMILY_OF Ishtar", "Poland IS_LOCATED_IN Europe".
+
+In above example this is encoded as `R1   Lives_In Arg1:T1 Arg2:T2`
+
+Which means: Relationship with ID `R1`, is of type `Lives_In`, and is between `T1` and `T2`.
+
+Read more about BRAT at. <https://brat.nlplab.org>
+
+## See BART in action
+
+Below is a function for reading in BRAT files. It reads relations into one data frame and entities into another data frame. Run it to read in the example.ann file.
+
+It will go through the file one line at a time. It will use the first chatacter (T or R) to identify if we're talking about (T)ag like T1, T2, T34, or (R)elationship like R1,R2,R7. Then we parse it into a dataframe with tags and relationships. Code below you'll never have to change, but if when you want to load an .ann file you can just use this `parse_ann_file` function.
+
+```{r, include=FALSE}
+# WHEN YOU RUN THIS CODE, YOU MIGHT BE ASKED IF YOU'D LIKE TO RELOAD RSTUDIO: **ANSWER 'NO'**
+# for all packages we need:
+install.packages("pacman")
+pacman::p_load(dplyr, stringr)
+```
+
+```{r}
+
+# Define a function to read and process .ann file
+parse_ann_file <- function(file_path) {
+  # Read the .ann file
+  ann_lines <- readLines(file_path)
+  
+  # Initialize empty data frames for storing entities and relations
+  entities <- data.frame(ID = character(), Type = character(), Start = integer(), End = integer(), Text = character())
+  relations <- data.frame(ID = character(), Relation = character(), Arg1 = character(), Arg2 = character())
+  
+  # Loop through lines and parse
+  for (line in ann_lines) {
+    if (startsWith(line, "T")) {
+      # Parse entity line (e.g., T1 PERSON 0 4 John)
+      parts <- str_split(line, "\\s+")[[1]]
+      entities <- entities %>% add_row(
+        ID = parts[1],
+        Type = parts[2],
+        Start = as.integer(parts[3]),
+        End = as.integer(parts[4]),
+        Text = parts[5]
+      )
+    } else if (startsWith(line, "R")) {
+      # Parse relation line (e.g., R1 Lives_In Arg1:T1 Arg2:T2)
+      parts <- str_split(line, "\\s+")[[1]]
+      relations <- relations %>% add_row(
+        ID = parts[1],
+        Relation = parts[2],
+        Arg1 = str_replace(parts[3], "Arg1:", ""),
+        Arg2 = str_replace(parts[4], "Arg2:", "")
+      )
+    }
+  }
+  
+  list(entities = entities, relations = relations)
+}
+```
+
+now let's use that function:
+
+```{r}
+# Example usage
+ann_data <- parse_ann_file("./data/example.ann")
+
+# View the parsed entities and relations
+print(ann_data$entities)
+print(ann_data$relations)
+
+```
+
+Now that you can parse the .ann file into R dataframes. Video for this badge has explained how you could use them. In terms of code, you could use annotation to:
+
+- Verify if your NLP methods worked (eg. check if Entity Recognition has identified all PERSONS). This could be for assessing if things work, but also for checking where youc an improve your code, so that then you improve it, and check if it helped.
+- Teach a machine learning model what is 'correct' (beyond the scope of this course but you're likely to try it at some point). For this you would need a lot of annotated text.
+
+## Extra things to look at and think of:
+
+You an look at example BRAT files, where authors of that library provide the original text and the annotation.
+
+[Lots of examples of BRAT files in a medical context](https://github.com/nlplab/brat/tree/master/example-data/corpora/NCBI-disease).
+
+Indeed, let's download bunch of Bart files form that library so that you can have a look at them (in the Files section of your Rstudio).
+
+See what files are there [on nlplab's website](https://github.com/nlplab/brat/tree/master/example-data/corpora/NCBI-disease), and then run below code to bring over all of those files to your computer:
+
+```{r, include=FALSE}
+options(timeout = 600)
+online_folder <- "https://raw.githubusercontent.com/nlplab/brat/refs/heads/master/example-data/corpora/NCBI-disease/"
+local_folder <- "./data/bart/"
+if (!dir.exists(local_folder)) {dir.create(local_folder)}
+
+
+file_names <- c("PMID-10429004", "PMID-10556298", "PMID-10915770", "PMID-1248000", "PMID-23402", "PMID-2912886", "PMID-3578281", "PMID-3600793", "PMID-495634", "PMID-6585184", "PMID-7055648", "PMID-7550230", "PMID-7795652", "PMID-8128954", "PMID-8673131", "PMID-8808606", "PMID-8929264", "PMID-9066888", "PMID-9463309", "PMID-9888390")
+
+# you might have not see this before: For loop allows us to repeat action in { } for each item in a collection:
+
+for (file_name in file_names){                    # filename would be eg. PMID-10429004 (first time, then it will be "PMID-10556298", etc )
+  for (file_type in c(".ann",".txt")){            # extension would be eg. .ann (then it would be .txt)
+    full_filename <- paste0(file_name,file_type)  # full_filename would be e.g. PMID-10429004.ann
+    download.file(paste0(online_folder, full_filename),
+                  paste0(local_folder, full_filename)) 
+  }
+}
+
+
+```
+
+## Praparing BART for human cleanup (Not strictly part of this badge, but it could be fun thi think about it)
+
+Think about a way to use previous tools you learned, eg. Entity recognition, to automatically generate a .ann file. What you would need is:
+
+In our sentence from above `John moved to Paris last year.`
+- an accurate-ish way to identify a string which describes something (e.g. "Paris") and what it describes (e.g. LOCATION)
+- a way to find out where this given string is in text (eg. between characters 14 and 19)
+- add a new line to the new file, for each item you identified.
+
+# Reflection:
+
+Now is a good moment to write down your self reflection: think of 3 STARS (things that you learned in this badge), and 1 WISH: a thing you wish you understood better. You might also thing of what would you do to fulfil your wish. Write them down.
+
+# Conclusion:
+
+Creating BART files requires the use of special annotation software. Essentially it is like using different colours of highlighters to highlight and annotate a book. Now you can load those files into R, so that becomes another useful resource.
+
