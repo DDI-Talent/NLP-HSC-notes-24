@@ -110,7 +110,7 @@ Now we will use the package `MLmetrics` to call functions precision,recall and F
 # WHEN YOU RUN THIS CODE, YOU MIGHT BE ASKED IF YOU'D LIKE TO RELOAD RSTUDIO: **ANSWER 'NO'**
 # for all packages we need:
 install.packages("pacman")
-pacman::p_load(MLmetrics, dplyr)
+pacman::p_load(MLmetrics, dplyr, stringr)
 ```
 
 Notice that We will not do the math ourselves this time, instead we will lean on the MLmetrics and use that library's functions instead!
@@ -175,7 +175,6 @@ read_brat_file <- function(file_path) {
     
     if (startsWith(line, "T")) {
       # Parse entity line (e.g., T1 PERSON 0 4 John)
-      parts <- str_split(line, "\\s+")[[1]]
       entities <- entities %>% add_row(
 				ID = entity_id,
 	      Type = entity_info[1],
@@ -185,7 +184,6 @@ read_brat_file <- function(file_path) {
       )
     } else if (startsWith(line, "R")) {
       # Parse relation line (e.g., R1 Lives_In Arg1:T1 Arg2:T2)
-      parts <- str_split(line, "\\s+")[[1]]
       relations <- relations %>% add_row(
         ID = entity_id,
         Relation = entity_info[1],

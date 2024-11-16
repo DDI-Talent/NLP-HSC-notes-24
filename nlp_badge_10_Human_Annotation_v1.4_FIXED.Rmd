@@ -111,7 +111,6 @@ read_brat_file <- function(file_path) {
     
     if (startsWith(line, "T")) {
       # Parse entity line (e.g., T1 PERSON 0 4 John)
-      parts <- str_split(line, "\\s+")[[1]]
       entities <- entities %>% add_row(
 				ID = entity_id,
 	      Type = entity_info[1],
@@ -121,7 +120,6 @@ read_brat_file <- function(file_path) {
       )
     } else if (startsWith(line, "R")) {
       # Parse relation line (e.g., R1 Lives_In Arg1:T1 Arg2:T2)
-      parts <- str_split(line, "\\s+")[[1]]
       relations <- relations %>% add_row(
         ID = entity_id,
         Relation = entity_info[1],

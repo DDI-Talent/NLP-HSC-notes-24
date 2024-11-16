@@ -10,6 +10,7 @@
 
 # python
 **/.ipynb_checkpoints
+**/*.nb.html
 
 
 # History files
